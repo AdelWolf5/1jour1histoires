@@ -94,6 +94,32 @@
   .paypal-button:hover {
     background: #005ea6;
   }
+  #quiz-section {margin-top: 2rem;}
+  .quiz-button {
+    display: inline-block;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.7rem 1.2rem;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  .quiz-button:hover {background:#555;}
+  .quiz-option {
+    display:block;
+    width:100%;
+    text-align:left;
+    background:#333;
+    color:#fff;
+    border:1px solid #555;
+    border-radius:4px;
+    padding:0.5rem;
+    margin-top:0.5rem;
+    cursor:pointer;
+  }
+  .quiz-option:hover {background:#444;}
+  #quizResult {margin-top:1rem;white-space:pre-wrap;}
   @media (max-width: 600px) {
     header h1 {font-size: 1rem;}
   }
@@ -118,6 +144,16 @@
     <source src="https://cdn.pixabay.com/download/audio/2022/03/31/audio_4b9a93fbe2.mp3?filename=rain-ambient-112784.mp3" type="audio/mpeg">
   </audio>
   <a class="paypal-button" href="https://www.paypal.com/donate?business=mbkauto42%40gmail.com" target="_blank">👉 Aider à me faire grandir 💛</a>
+  <div id="quiz-section">
+    <h2>Quiz du Jour</h2>
+    <button id="startQuizBtn" class="quiz-button">Lancer le quiz</button>
+    <div id="quizContainer" style="display:none">
+      <p id="quizQuestion"></p>
+      <div id="quizOptions"></div>
+      <button id="nextQuestionBtn" class="quiz-button" style="display:none">Suivant</button>
+    </div>
+    <div id="quizResult"></div>
+  </div>
 </div>
 <script>
 const chaptersEl = document.getElementById('chapters');
@@ -125,12 +161,103 @@ const contentEl = document.getElementById('content');
 const categoryEl = document.getElementById('category');
 const relaxBtn = document.getElementById('relaxBtn');
 const relaxAudio = document.getElementById('relaxAudio');
+const startQuizBtn = document.getElementById('startQuizBtn');
+const quizContainer = document.getElementById('quizContainer');
+const quizQuestion = document.getElementById('quizQuestion');
+const quizOptions = document.getElementById('quizOptions');
+const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+const quizResult = document.getElementById('quizResult');
 
 const data = {
   enfant: Array.from({length:5},(_,i)=>`Conte pour enfants – chapitre ${i+1}`),
   adulte: Array.from({length:5},(_,i)=>`Récit adulte – chapitre ${i+1}`),
   religion: Array.from({length:5},(_,i)=>`Histoire religieuse – chapitre ${i+1}`)
 };
+
+const questions = [
+  {q:'Quel animal raconte les plus belles histoires ?',options:['Le chat','Le lion','Le dromadaire'],a:2},
+  {q:"Dans quel desert se cache l'oasis magique ?",options:['Sahara','Gobi','Atacama'],a:0},
+  {q:'Combien de jours compte une semaine ?',options:['5','7','9'],a:1},
+  {q:'Quelle couleur obtient-on en mélangeant bleu et jaune ?',options:['Vert','Orange','Violet'],a:0},
+  {q:'Le Coran est un livre sacré de quelle religion ?',options:['Bouddhisme','Islam','Christianisme'],a:1}
+];
+
+let quizIndex = 0;
+let quizScore = 0;
+let quizSet = [];
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+function speak(txt){
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(txt));
+  }
+}
+
+function startQuiz(){
+  const lock = localStorage.getItem('quizDisabledUntil');
+  if(lock && Date.now() < +lock){
+    quizResult.textContent = 'Reviens demain pour rejouer !';
+    startQuizBtn.disabled = true;
+    return;
+  }
+  quizIndex = 0;
+  quizScore = 0;
+  quizSet = shuffle([...questions]).slice(0,3);
+  startQuizBtn.style.display='none';
+  quizResult.textContent='';
+  quizContainer.style.display='block';
+  showQuestion();
+}
+
+function showQuestion(){
+  const q = quizSet[quizIndex];
+  quizQuestion.textContent = q.q;
+  quizOptions.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='quiz-option';
+    b.textContent=opt;
+    b.onclick=()=>selectAnswer(i);
+    quizOptions.appendChild(b);
+  });
+  nextQuestionBtn.style.display='none';
+  speak(q.q);
+}
+
+function selectAnswer(i){
+  const q=quizSet[quizIndex];
+  if(i===q.a) quizScore++;
+  Array.from(quizOptions.children).forEach((b,idx)=>{
+    b.disabled=true;
+    if(idx===q.a) b.style.background='#0070BA';
+    if(idx===i && idx!==q.a) b.style.background='#700';
+  });
+  nextQuestionBtn.style.display='inline-block';
+}
+
+nextQuestionBtn.addEventListener('click',()=>{
+  quizIndex++;
+  if(quizIndex<quizSet.length) showQuestion();
+  else endQuiz();
+});
+
+function endQuiz(){
+  quizContainer.style.display='none';
+  quizResult.textContent=`Tu as ${quizScore}/3 bonnes réponses`;
+  if(quizScore>=2) quizResult.textContent+=`\nBravo ! Tu débloques une surprise demain 📖🎁`;
+  startQuizBtn.textContent='Rejouer demain';
+  startQuizBtn.style.display='inline-block';
+  startQuizBtn.disabled=true;
+  localStorage.setItem('quizDisabledUntil', Date.now()+86400000);
+}
+
+const lock = localStorage.getItem('quizDisabledUntil');
+if(lock && Date.now() < +lock){
+  startQuizBtn.textContent='Reviens demain pour rejouer';
+  startQuizBtn.disabled=true;
+}
+startQuizBtn.addEventListener('click', startQuiz);
 
 categoryEl.addEventListener('change', () => {
   const cat = categoryEl.value;
