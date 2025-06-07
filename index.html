@@ -363,18 +363,20 @@ border: 1px solid var(–border-color);
 }
 
 .vip-btn {
-background: var(–vip-button);
-border: none;
-padding: 1rem 2.5rem;
-font-weight: 700;
-border-radius: 16px;
-color: #1a1a1a;
-cursor: pointer;
-margin-top: 1rem;
-transition: all 0.3s ease;
-font-size: 1.1rem;
-text-transform: uppercase;
-letter-spacing: 1px;
+  display: inline-block;
+  background: var(–vip-button);
+  border: none;
+  padding: 1rem 2.5rem;
+  font-weight: 700;
+  border-radius: 16px;
+  color: #1a1a1a;
+  cursor: pointer;
+  text-decoration: none;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 position: relative;
 overflow: hidden;
 }
@@ -560,7 +562,7 @@ h1 {
     <p>📱 Accès prioritaire aux nouveautés</p>
 
 ```
-<button id="btn-paypal" class="vip-btn">Devenir VIP - 0,99 € (paiement unique)</button>
+<a id="btn-paypal" class="vip-btn" href="https://www.paypal.com/donate?business=mbkauto42%40gmail.com" target="_blank" rel="noopener">Devenir VIP - 0,99 € (paiement unique)</a>
 <div id="vip-msg" class="countdown"></div>
 ```
 
@@ -733,8 +735,8 @@ h1 {
         btnPaypal.addEventListener('click', () => {
           showMessage("🚀 Redirection vers le paiement sécurisé...", vipMsg, 'pulse');
           setTimeout(() => {
-            alert("💳 Fonction de paiement à configurer avec PayPal");
-          }, 1500);
+            window.open('https://www.paypal.com/donate?business=mbkauto42%40gmail.com', '_blank');
+          }, 500);
         });
       }
 
